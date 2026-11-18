@@ -47,13 +47,13 @@ SW.SkyColors[SW_TIME_AFTERNOON] = {
 }
 
 SW.SkyColors[SW_TIME_DUSK] = {
-	["TopColor"]		= Vector( 0.12 , 0.19 , 0.40 ) ,
-	["BottomColor"]		= Vector( 0.82 , 0.38 , 0.20 ) ,
-	["FadeBias"]		= 0.35 ,
+	["TopColor"]		= Vector( 0.04 , 0.09 , 0.27 ) ,
+	["BottomColor"]		= Vector( 0.86 , 0.41 , 0.12 ) ,
+	["FadeBias"]		= 0.12 ,
 	["HDRScale"]		= 0.66 ,
-	["DuskIntensity"]	= 2.0 ,
-	["DuskScale"]		= 0.65 ,
-	["DuskColor"]		= Vector( 1 , 0.24 , 0.08 ) ,
+	["DuskIntensity"]	= 1.56 ,
+	["DuskScale"]		= 0.54 ,
+	["DuskColor"]		= Vector( 1 , 0 , 0 ) ,
 	["SunSize"]			= 2 ,
 	["SunColor"]		= Vector( 1 , 0.42 , 0.16 )
 }
@@ -66,7 +66,7 @@ SW.SkyColors[SW_TIME_NIGHT] = {
 	["DuskIntensity"]	= 0 ,
 	["DuskScale"]		= 0.54 ,
 	["DuskColor"]		= Vector( 1 , 0.38 , 0 ) ,
-	["SunSize"]			= 2 ,
+	["SunSize"]			= 0 ,
 	["SunColor"]		= Vector( 0.2 , 0.1 , 0 )
 }
 
@@ -486,8 +486,6 @@ function SW.DayNightThink()
 
 		if( !SW.NextSunUpdate or CurTime() > SW.NextSunUpdate ) then
 
-			SW.UpdateSunDirection()
-
 			if( SW.GetCurrentWeather().ShowEnvSun == false or SW.Time < SW_TIME_DAWN or SW.Time > SW_TIME_DUSK ) then
 
 				if !SW.EnvSun.Off then
@@ -508,6 +506,7 @@ function SW.DayNightThink()
 
 			end
 
+			SW.UpdateSunDirection()
 			SW.NextSunUpdate = CurTime() + GetConVarNumber("sw_perf_updatedelay_sun")
 
 		end
@@ -708,16 +707,7 @@ function SW.DayNightThink()
 			SW.SkyPaint:SetDuskColor( values.DuskColor )
 			SW.SkyPaint:SetSunColor( values.SunColor )
 			
-			-- if( SW.Time > 4 and SW.Time < 20 and SW.Weather == "" ) then
-			if( SW.Time > SW_TIME_DAWN and SW.Time < SW_TIME_DUSK and SW.Weather == "" ) then
-
-				SW.SkyPaint:SetSunSize( values.SunSize )
-
-			else
-
-				SW.SkyPaint:SetSunSize( 0 )
-
-			end
+			SW.SkyPaint:SetSunSize( values.SunSize )
 			
 		end
 		
