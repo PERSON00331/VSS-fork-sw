@@ -271,28 +271,20 @@ function SW.InitPostEntitySV()
 	end
 
 	SW.EnvSun = ents.FindByClass( "env_sun" )[1]
-	if GetConVarNumber("sw_func_sun") == 1 and IsValid(SW.EnvSun) then
+	if GetConVarNumber("sw_func_sun") == 1 then
+		if not IsValid( SW.EnvSun ) then
+			SW.EnvSun = ents.Create( "env_sun" )
+			if IsValid( SW.EnvSun ) then
+				SW.EnvSun:Spawn()
+				SW.EnvSun:Activate()
+			end
+		end
 
-		SW.EnvSun:SetKeyValue( "sun_dir", "1 0 0" )
-
-		-- local tab = SW.EnvSun:GetSaveTable()
-
-		-- SW.EnvSun:SetKeyValue( "angles" , tab["angles"] )
-		-- SW.EnvSun:SetKeyValue( "hdrcolorscale" , tab["hdrcolorscale"] )
-		-- SW.EnvSun:SetKeyValue( "material" , tostring( tab["material"] ) )
-		-- SW.EnvSun:SetKeyValue( "overlaycolor" , tab["overlaycolor"] )
-		-- SW.EnvSun:SetKeyValue( "overlaymaterial" , tostring( tab["overlaymaterial"] ) )
-		-- SW.EnvSun:SetKeyValue( "overlaysize" , tonumber( tab["overlaysize"] ) )
-		-- SW.EnvSun:SetKeyValue( "pitch" , tonumber( tab["pitch"] ) )
-		-- SW.EnvSun:SetKeyValue( "rendercolor" , tab["rendercolor"] )
-		-- SW.EnvSun:SetKeyValue( "size" , tonumber( tab["size"] ) )
-		-- SW.EnvSun:SetKeyValue( "use_angles" , tobool( tab["use_angles"] ) )
-
-	else
-
-		SW.EnvSun = ents.Create("env_sun")
-		SW.EnvSun:Spawn()
-		SW.EnvSun:Activate()
+		if IsValid( SW.EnvSun ) then
+			SW.EnvSun:Fire( "TurnOff" )
+			SW.EnvSun.Off = true
+			SW.UpdateSunDirection()
+		end
 
 	end
 
@@ -353,6 +345,17 @@ function SW.GetRealTime()
 	local tab = os.date( "*t" )
 
 	return GetConVarNumber("sw_time_real_offset") + tab.hour + tab.min / 60 + tab.sec / 3600
+
+end
+
+function SW.UpdateSunDirection()
+
+	if SW.IsPaintedSkybox != true or GetConVarNumber("sw_func_sun") != 1 or !IsValid( SW.EnvSun ) then return end
+	if !SW.Time or SW.Time < SW_TIME_DAWN or SW.Time > SW_TIME_DUSK then return end
+
+	local dayProgress = math.Clamp( ( SW.Time - SW_TIME_DAWN ) / ( SW_TIME_DUSK - SW_TIME_DAWN ), 0, 1 )
+	local pitch = -180 * ( 1 - dayProgress )
+	SW.EnvSun:SetKeyValue( "sun_dir", tostring( Angle( pitch, 20, 0 ):Forward() ) )
 
 end
 
@@ -475,20 +478,15 @@ function SW.DayNightThink()
 
 	SW.UpdateLightStyle( strLightStyle )
 
-	if GetConVarNumber("sw_func_sun") == 1 then
+	if GetConVarNumber("sw_func_sun") == 1 and IsValid( SW.EnvSun ) then
 
 		if( !SW.NextSunUpdate or CurTime() > SW.NextSunUpdate ) then
 
-			-- if( SW.Time > 4 and SW.Time < 20 and SW.GetCurrentWeather().ShowEnvSun != false ) then
-			if( SW.Time > SW_TIME_DAWN and SW.Time < SW_TIME_DUSK and SW.GetCurrentWeather().ShowEnvSun != false ) then
-
-				-- local mul = 1 - ( SW.Time - SW_TIME_DAWN ) / 16
-				local mul = 1 - ( SW.Time - SW_TIME_DAWN ) / ( SW_TIME_DUSK - SW_TIME_DAWN )
-				SW.EnvSun:SetKeyValue( "sun_dir", tostring( Angle( -180 * mul, 20, 0 ):Forward() ) )
+			if SW.Time >= SW_TIME_DAWN and SW.Time <= SW_TIME_DUSK and SW.GetCurrentWeather().ShowEnvSun != false then
+				SW.UpdateSunDirection()
 
 			end
 
-			-- if( SW.GetCurrentWeather().ShowEnvSun == false or SW.Time < 4 or SW.Time > 20 ) then
 			if( SW.GetCurrentWeather().ShowEnvSun == false or SW.Time < SW_TIME_DAWN or SW.Time > SW_TIME_DUSK ) then
 
 				if !SW.EnvSun.Off then
@@ -774,11 +772,7 @@ function SW.SetTime( t )
 
 	SW.UpdateLightStyle( strLightStyle )
 
-	if IsValid(SW.EnvSun) then
-
-		SW.EnvSun:SetKeyValue( "sun_dir", "1 0 0" )
-
-	end
+	SW.UpdateSunDirection()
 
 end
 
