@@ -23,15 +23,15 @@ SW_TIME_FOG = 3
 SW.SkyColors = { }
 
 SW.SkyColors[SW_TIME_DAWN] = {
-	["TopColor"]		= Vector( 0.64 , 0.73 , 0.91 ) ,
-	["BottomColor"]		= Vector( 0.74 , 0.86 , 0.98 ) ,
-	["FadeBias"]		= 0.82 ,
+	["TopColor"]		= Vector( 0.12 , 0.20 , 0.38 ) ,
+	["BottomColor"]		= Vector( 0.76 , 0.42 , 0.32 ) ,
+	["FadeBias"]		= 0.65 ,
 	["HDRScale"]		= 0.66 ,
-	["DuskIntensity"]	= 2.44 ,
-	["DuskScale"]		= 0.54 ,
-	["DuskColor"]		= Vector( 1 , 0.38 , 0 ) ,
+	["DuskIntensity"]	= 2.2 ,
+	["DuskScale"]		= 0.65 ,
+	["DuskColor"]		= Vector( 1 , 0.28 , 0.12 ) ,
 	["SunSize"]			= 2 ,
-	["SunColor"]		= Vector( 0.2 , 0.1 , 0 )
+	["SunColor"]		= Vector( 1 , 0.42 , 0.18 )
 }
 
 SW.SkyColors[SW_TIME_AFTERNOON] = {
@@ -47,15 +47,15 @@ SW.SkyColors[SW_TIME_AFTERNOON] = {
 }
 
 SW.SkyColors[SW_TIME_DUSK] = {
-	["TopColor"]		= Vector( 0.45 , 0.55 , 1 ) ,
-	["BottomColor"]		= Vector( 0.91 , 0.64 , 0.05 ) ,
-	["FadeBias"]		= 0.3 ,
+	["TopColor"]		= Vector( 0.12 , 0.19 , 0.40 ) ,
+	["BottomColor"]		= Vector( 0.82 , 0.38 , 0.20 ) ,
+	["FadeBias"]		= 0.35 ,
 	["HDRScale"]		= 0.66 ,
-	["DuskIntensity"]	= 1.56 ,
-	["DuskScale"]		= 0.54 ,
-	["DuskColor"]		= Vector( 1 , 0 , 0 ) ,
+	["DuskIntensity"]	= 2.0 ,
+	["DuskScale"]		= 0.65 ,
+	["DuskColor"]		= Vector( 1 , 0.24 , 0.08 ) ,
 	["SunSize"]			= 2 ,
-	["SunColor"]		= Vector( 1 , 0.47 , 0 )
+	["SunColor"]		= Vector( 1 , 0.42 , 0.16 )
 }
 
 SW.SkyColors[SW_TIME_NIGHT] = {
@@ -354,7 +354,12 @@ function SW.UpdateSunDirection()
 	if !SW.Time then return end
 
 	local pitch = ( SW.Time - SW_TIME_DUSK ) * 15
-	SW.EnvSun:SetKeyValue( "sun_dir", tostring( Angle( pitch, 20, 0 ):Forward() ) )
+	local sunDirection = Angle( pitch, 20, 0 ):Forward()
+	SW.EnvSun:SetKeyValue( "sun_dir", tostring( sunDirection ) )
+
+	if IsValid( SW.SkyPaint ) then
+		SW.SkyPaint:SetSunNormal( sunDirection )
+	end
 
 end
 
@@ -577,21 +582,16 @@ function SW.DayNightThink()
 				
 			else
 
-				if( SW.Time <= 4 ) then
+				if( SW.Time <= SW_TIME_DAWN - 2 ) then
 					
 					skypaintstart = SW_TIME_NIGHT
 					skypaintend = SW_TIME_NIGHT
 					
-				-- elseif( SW.Time <= 6 ) then
-					-- skypaintstart = SW_TIME_NIGHT
-					-- skypaintend = SW_TIME_DAWN
-					-- skypaintlerp = ( SW.Time - 4 ) / 2
-
-				elseif( SW.Time <= 8 ) then
+				elseif( SW.Time <= SW_TIME_DAWN ) then
 					
 					skypaintstart = SW_TIME_NIGHT
 					skypaintend = SW_TIME_DAWN
-					skypaintlerp = ( SW.Time - 4 ) / 4
+					skypaintlerp = ( SW.Time - ( SW_TIME_DAWN - 2 ) ) / 2
 					
 				elseif( SW.Time <= 10 ) then
 					
