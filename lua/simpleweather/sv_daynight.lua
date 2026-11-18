@@ -362,6 +362,31 @@ local function GetDaylightFactor( time )
 
 end
 
+local function GetStarFade( time )
+
+	local duskFadeEnd = SW_TIME_DUSK + 50 / 60
+	local nightFadeEnd = SW_TIME_NIGHT + 0.5
+	local sunriseFadeStart = SW_TIME_DAWN - 50 / 60
+	local dawnFadeEnd = SW_TIME_DAWN + 0.5
+
+	if time >= SW_TIME_DUSK and time < duskFadeEnd then
+		return Lerp( ( time - SW_TIME_DUSK ) / ( duskFadeEnd - SW_TIME_DUSK ), 0.8, 0 )
+	elseif time >= SW_TIME_DUSK and time < SW_TIME_NIGHT then
+		return 0
+	elseif time >= SW_TIME_NIGHT and time < nightFadeEnd then
+		return Lerp( ( time - SW_TIME_NIGHT ) / ( nightFadeEnd - SW_TIME_NIGHT ), 0, 1.5 )
+	elseif time >= nightFadeEnd or time < sunriseFadeStart then
+		return 1.5
+	elseif time >= sunriseFadeStart and time < SW_TIME_DAWN then
+		return Lerp( ( time - sunriseFadeStart ) / ( SW_TIME_DAWN - sunriseFadeStart ), 1.5, 0 )
+	elseif time >= SW_TIME_DAWN and time < dawnFadeEnd then
+		return Lerp( ( time - SW_TIME_DAWN ) / ( dawnFadeEnd - SW_TIME_DAWN ), 0, 0.8 )
+	end
+
+	return 0.8
+
+end
+
 function SW.UpdateSunDirection()
 
 	if SW.IsPaintedSkybox != true or !SW.Time then return end
@@ -697,6 +722,7 @@ function SW.DayNightThink()
 			SW.SkyPaint:SetSunColor( values.SunColor )
 			
 			SW.SkyPaint:SetSunSize( values.SunSize )
+			SW.SkyPaint:SetStarFade( GetStarFade( SW.Time ) )
 			
 		end
 		
@@ -782,7 +808,6 @@ function SW.DNCUpdate( int )
 			SW.SkyPaint:SetStarTexture( "skybox/clouds" )
 			SW.SkyPaint:SetStarLayers( 1 )
 			SW.SkyPaint:SetStarScale( 2 )
-			SW.SkyPaint:SetStarFade( 0.8 )
 			SW.SkyPaint:SetStarSpeed( 0.03 )
 		end
 
@@ -804,7 +829,6 @@ function SW.DNCUpdate( int )
 			SW.SkyPaint:SetStarTexture( "skybox/clouds" )
 			SW.SkyPaint:SetStarLayers( 1 )
 			SW.SkyPaint:SetStarScale( 2 )
-			SW.SkyPaint:SetStarFade( 0.8 )
 			SW.SkyPaint:SetStarSpeed( 0.03 )
 		end
 
@@ -824,7 +848,6 @@ function SW.DNCUpdate( int )
 			SW.SkyPaint:SetStarTexture( "skybox/clouds" )
 			SW.SkyPaint:SetStarLayers( 1 )
 			SW.SkyPaint:SetStarScale( 2 )
-			SW.SkyPaint:SetStarFade( 0.8 )
 			-- SW.SkyPaint:SetStarSpeed( GetConVarNumber("sw_time_speed_stars") )
 			SW.SkyPaint:SetStarSpeed( 0.01 )
 		end
@@ -846,7 +869,6 @@ function SW.DNCUpdate( int )
 		if GetConVarNumber("sw_func_skybox") == 1 and IsValid( SW.SkyPaint ) then
 			SW.SkyPaint:SetStarTexture( "skybox/starfield" )
 			SW.SkyPaint:SetStarScale( 0.5 )
-			SW.SkyPaint:SetStarFade( 1.5 )
 			-- SW.SkyPaint:SetStarSpeed( GetConVarNumber("sw_time_speed_stars") )
 			SW.SkyPaint:SetStarSpeed( 0.01 )
 		end
