@@ -202,6 +202,8 @@ end
 
 function SW.InitPostEntitySV()
 
+	SW.IsPaintedSkybox = string.lower( GetConVarString( "sv_skyname" ) or "" ) == "painted"
+
 	-- Find any existing env_wind entities
 	SW.EnvWind = ents.FindByClass( "env_wind" )[1]
 
@@ -233,13 +235,15 @@ function SW.InitPostEntitySV()
 	end
 
 	SW.SkyPaint = ents.FindByClass( "env_skypaint" )[1]
-	if GetConVarNumber("sw_func_skybox") == 1 then
+	if GetConVarNumber("sw_func_skybox") == 1 and SW.IsPaintedSkybox then
 
 		if !SW.SkyPaint or !SW.SkyPaint:IsValid() then
 
 			SW.SkyPaint = ents.Create("env_skypaint")
-			SW.SkyPaint:Spawn()
-			SW.SkyPaint:Activate()
+			if IsValid( SW.SkyPaint ) then
+				SW.SkyPaint:Spawn()
+				SW.SkyPaint:Activate()
+			end
 
 		-- else
 
@@ -342,7 +346,7 @@ hook.Add( "InitPostEntity", "SW.InitPostEntitySV", SW.InitPostEntitySV )
 ------------------------------
 ------------------------------
 
-SW.LastTimePeriod = SW_TIME_NIGHT
+SW.LastTimePeriod = nil
 
 function SW.GetRealTime()
 
@@ -356,6 +360,7 @@ function SW.DayNightThink()
 
 	-- If SimpleWeather is disabled...
 	if GetConVarNumber("sw_func_master") != 1 then return end
+	if SW.IsPaintedSkybox != true then return end
 
 	if GetConVarNumber("sw_time_pause") == 0 then
 
@@ -420,44 +425,26 @@ function SW.DayNightThink()
 	--------------------
 	-- Map Logic Checks
 	--------------------
+	local timePeriod
+	local dncPeriod
 	if SW.Time >= SW_TIME_NIGHT or SW.Time < SW_TIME_DAWN then
-
-		-- print("Map Logic: NIGHT")
-		-- Run the NIGHT map logic (4)
-		SW.LastTimePeriod = SW_TIME_NIGHT
-		SW.DNCUpdate( 4 )
-		hook.Call( "WeatherDay", GAMEMODE )
-
+		timePeriod = SW_TIME_NIGHT
+		dncPeriod = 4
+	elseif SW.Time < SW_TIME_AFTERNOON then
+		timePeriod = SW_TIME_DAWN
+		dncPeriod = 1
+	elseif SW.Time < SW_TIME_DUSK then
+		timePeriod = SW_TIME_AFTERNOON
+		dncPeriod = 2
+	else
+		timePeriod = SW_TIME_DUSK
+		dncPeriod = 3
 	end
 
-	if SW.Time >= SW_TIME_DAWN and SW.Time < SW_TIME_AFTERNOON then
-
-		-- print("Map Logic: DAWN")
-		-- Run the DAWN map logic (1)
-		SW.LastTimePeriod = SW_TIME_DAWN
-		SW.DNCUpdate( 1 )
+	if SW.LastTimePeriod != timePeriod then
+		SW.LastTimePeriod = timePeriod
+		SW.DNCUpdate( dncPeriod )
 		hook.Call( "WeatherDay", GAMEMODE )
-
-	end
-
-	if SW.Time >= SW_TIME_AFTERNOON and SW.Time < SW_TIME_DUSK then
-
-		-- print("Map Logic: AFTERNOON")
-		-- Run the AFTERNOON map logic (2)
-		SW.LastTimePeriod = SW_TIME_AFTERNOON
-		SW.DNCUpdate( 2 )
-		hook.Call( "WeatherDay", GAMEMODE )
-
-	end
-	
-	if SW.Time >= SW_TIME_DUSK and SW.Time < SW_TIME_NIGHT then
-	
-		-- print("Map Logic: DUSK")
-		-- Run the DUSK map logic (3)
-		SW.LastTimePeriod = SW_TIME_DUSK
-		SW.DNCUpdate( 3 )
-		hook.Call( "WeatherDay", GAMEMODE )
-
 	end
 
 	-----------------------
@@ -810,6 +797,8 @@ end
 -- Day and Night Swap Functions
 function SW.DNCUpdate( int )
 
+	if SW.IsPaintedSkybox != true then return end
+
 	-- 1=Dawn
 	if int == 1 then
 
@@ -820,11 +809,13 @@ function SW.DNCUpdate( int )
 
 		end
 
-		SW.SkyPaint:SetStarTexture( "skybox/clouds" )
-		SW.SkyPaint:SetStarLayers( 1 )
-		SW.SkyPaint:SetStarScale( 1 )
-		SW.SkyPaint:SetStarFade( 0.4 )
-		SW.SkyPaint:SetStarSpeed( 0.03 )
+		if GetConVarNumber("sw_func_skybox") == 1 and IsValid( SW.SkyPaint ) then
+			SW.SkyPaint:SetStarTexture( "skybox/clouds" )
+			SW.SkyPaint:SetStarLayers( 1 )
+			SW.SkyPaint:SetStarScale( 1 )
+			SW.SkyPaint:SetStarFade( 0.4 )
+			SW.SkyPaint:SetStarSpeed( 0.03 )
+		end
 
 		-- todo: env_sun sprite to sun
 
@@ -840,11 +831,13 @@ function SW.DNCUpdate( int )
 
 		end
 
-		SW.SkyPaint:SetStarTexture( "skybox/clouds" )
-		SW.SkyPaint:SetStarLayers( 1 )
-		SW.SkyPaint:SetStarScale( 1 )
-		SW.SkyPaint:SetStarFade( 0.4 )
-		SW.SkyPaint:SetStarSpeed( 0.03 )
+		if GetConVarNumber("sw_func_skybox") == 1 and IsValid( SW.SkyPaint ) then
+			SW.SkyPaint:SetStarTexture( "skybox/clouds" )
+			SW.SkyPaint:SetStarLayers( 1 )
+			SW.SkyPaint:SetStarScale( 1 )
+			SW.SkyPaint:SetStarFade( 0.4 )
+			SW.SkyPaint:SetStarSpeed( 0.03 )
+		end
 
 	end
 
@@ -858,11 +851,13 @@ function SW.DNCUpdate( int )
 
 		end
 
-		SW.SkyPaint:SetStarTexture( "skybox/starfield" )
-		SW.SkyPaint:SetStarScale( 0.5 )
-		SW.SkyPaint:SetStarFade( 1.5 )
-		-- SW.SkyPaint:SetStarSpeed( GetConVarNumber("sw_time_speed_stars") )
-		SW.SkyPaint:SetStarSpeed( 0.01 )
+		if GetConVarNumber("sw_func_skybox") == 1 and IsValid( SW.SkyPaint ) then
+			SW.SkyPaint:SetStarTexture( "skybox/starfield" )
+			SW.SkyPaint:SetStarScale( 0.5 )
+			SW.SkyPaint:SetStarFade( 1.5 )
+			-- SW.SkyPaint:SetStarSpeed( GetConVarNumber("sw_time_speed_stars") )
+			SW.SkyPaint:SetStarSpeed( 0.01 )
+		end
 
 		-- todo: env_sun sprite to moon
 
@@ -878,11 +873,13 @@ function SW.DNCUpdate( int )
 
 		end
 
-		SW.SkyPaint:SetStarTexture( "skybox/starfield" )
-		SW.SkyPaint:SetStarScale( 0.5 )
-		SW.SkyPaint:SetStarFade( 1.5 )
-		-- SW.SkyPaint:SetStarSpeed( GetConVarNumber("sw_time_speed_stars") )
-		SW.SkyPaint:SetStarSpeed( 0.01 )
+		if GetConVarNumber("sw_func_skybox") == 1 and IsValid( SW.SkyPaint ) then
+			SW.SkyPaint:SetStarTexture( "skybox/starfield" )
+			SW.SkyPaint:SetStarScale( 0.5 )
+			SW.SkyPaint:SetStarFade( 1.5 )
+			-- SW.SkyPaint:SetStarSpeed( GetConVarNumber("sw_time_speed_stars") )
+			SW.SkyPaint:SetStarSpeed( 0.01 )
+		end
 
 		-- todo: env_sun sprite to moon
 

@@ -284,12 +284,72 @@ end
 
 function SW.RainSoundThink()
 
-	if SW.Sound then
-		SW.Sound:Stop()
-		SW.Sound = nil
+	local player = LocalPlayer()
+	if not IsValid( player ) then return end
+
+	local soundVolume = 0
+	if GetConVarNumber( "sw_cl_sound" ) != 0 then
+		if SW.IsOutsideFrame then
+			soundVolume = 0.35
+		else
+			local now = CurTime()
+			if not SW.NextRainExposureCheck or now >= SW.NextRainExposureCheck then
+				local nearestOutside
+				local radius = 200
+				local probeDistances = { 64, 128, 192 }
+
+				for _, distance in ipairs( probeDistances ) do
+					for direction = 0, 7 do
+						local angle = math.rad( direction * 45 )
+						local position = SW.ViewPos + Vector( math.cos( angle ) * distance, math.sin( angle ) * distance, 0 )
+						local trace = {
+							start = position,
+							endpos = position + Vector( 0, 0, 32768 ),
+							mask = MASK_VISIBLE
+						}
+						local result = util.TraceLine( trace )
+
+						if not result.StartSolid and ( result.HitSky or result.HitNoDraw ) then
+							nearestOutside = distance
+							break
+						end
+					end
+
+					if nearestOutside then break end
+				end
+
+				SW.RainExposure = nearestOutside and math.max( 0, 1 - nearestOutside / radius ) or 0
+				SW.NextRainExposureCheck = now + 0.25
+			end
+
+			soundVolume = 0.35 * 0.65 * ( SW.RainExposure or 0 )
+		end
 	end
 
-	SW.SoundVolume = 0
+	soundVolume = soundVolume * GetConVarNumber( "sw_cl_sound_volume" )
+
+	if soundVolume <= 0 then
+		if SW.Sound then
+			SW.Sound:Stop()
+			SW.Sound = nil
+		end
+
+		SW.SoundVolume = 0
+		return
+	end
+
+	if not SW.Sound then
+		SW.Sound = CreateSound( player, "simpleweather/rain.wav" )
+		if not SW.Sound then return end
+
+		SW.Sound:PlayEx( 0, 100 )
+		SW.SoundVolume = 0
+	end
+
+	if math.abs( ( SW.SoundVolume or 0 ) - soundVolume ) > 0.01 then
+		SW.Sound:ChangeVolume( soundVolume, 0.25 )
+		SW.SoundVolume = soundVolume
+	end
 
 end
 
@@ -374,6 +434,12 @@ function SW.SoundThink()
 
 		SW.RainSoundThink()
 		return
+
+	elseif SW.Sound then
+
+		SW.Sound:Stop()
+		SW.Sound = nil
+		SW.SoundVolume = 0
 
 	elseif SW.GetCurrentWeather().Sound == "wind" and SW.IsOutsideFrame then
 

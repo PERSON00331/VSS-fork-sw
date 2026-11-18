@@ -380,12 +380,6 @@ function SW.PlayerInitialSpawn( ply )
 	-- If SimpleWeather is disabled...
 	if GetConVarNumber("sw_func_master") != 1 then return end
 
-	if GetConVarNumber("sw_func_skybox") != 0 then
-
-		RunConsoleCommand( "sv_skyname", "painted" )
-
-	end
-
 	net.Start( "SW.nSetWeather" )
 		net.WriteString( SW.WeatherMode )
 	net.Send( ply )

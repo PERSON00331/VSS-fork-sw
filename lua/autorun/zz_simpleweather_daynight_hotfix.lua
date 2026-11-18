@@ -26,22 +26,5 @@ if SERVER then
 		SW_LIGHT_DAY = safeLightStyle( GetConVarNumber( "sw_light_day_brightness" ), "y" )
 		SW_LIGHT_NIGHT = safeLightStyle( GetConVarNumber( "sw_light_night_brightness" ), "b" )
 		SW_LIGHT_STORM = safeLightStyle( GetConVarNumber( "sw_light_storm_brightness" ), "j" )
-
-		function SW.DayNightThink()
-			if GetConVarNumber( "sw_func_master" ) != 1 then return end
-
-			SW.Time = tonumber( SW.Time ) or GetConVarNumber( "sw_time_start" ) or 12
-			if GetConVarNumber( "sw_time_pause" ) == 0 then
-				SW.Time = SW.Time + FrameTime() * 0.01
-			end
-			if SW.Time >= 24 then SW.Time = 0 end
-
-			if not SW.NextClientUpdate or CurTime() > SW.NextClientUpdate then
-				net.Start( "SW.nSetTime" )
-				net.WriteFloat( SW.Time )
-				net.Broadcast()
-				SW.NextClientUpdate = CurTime() + math.max( GetConVarNumber( "sw_perf_updatedelay_client" ) or 1, 1 )
-			end
-		end
 	end )
 end

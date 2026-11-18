@@ -188,12 +188,12 @@ CreateConVar( "sw_fog_speed" , 0.01 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(F
 ----------------------------------------
 ----------------------------------------
 
-CreateConVar( "sw_time_pause" , 1 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Change the passage of time on or off." , 0 , 1 )
+CreateConVar( "sw_time_pause" , 0 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Change the passage of time on or off." , 0 , 1 )
 CreateConVar( "sw_time_start" , 10 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(INT) Set start time." , -1 , 23 )
 CreateConVar( "sw_time_real" , 0 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Set real-time on or off." , 0 , 1 )
 CreateConVar( "sw_time_real_offset" , 0 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(INT) If realtime is on, add this many timezones.\nFor example, if the server was GMT and you set this to -5, it'd be EST ingame." , -12 , 12 )
 CreateConVar( "sw_time_speed_day" , 0.01 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(FLOAT) Multiplier of time during the day.\nMake this bigger for time to go faster, and smaller for time to go slower." , 0 , 1 )
-CreateConVar( "sw_time_speed_night" , 0.02 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(FLOAT) Multiplier of time during the night.\nMake this bigger for time to go faster, and smaller for time to go slower." , 0 , 1 )
+CreateConVar( "sw_time_speed_night" , 0.013333 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(FLOAT) Multiplier of time during the night.\nMake this bigger for time to go faster, and smaller for time to go slower." , 0 , 1 )
 -- CreateConVar( "sw_time_speed_stars" , 0.01 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(FLOAT) Set the rotation speed of stars" , 0.01 , 5 )
 
 -- CreateConVar( "sw_time_dawn" , 6 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(INT) Hour to consider Dawn." , 0 , 23 )
@@ -1434,12 +1434,12 @@ if CLIENT then
 
 					["default"] = {
 
-						["sw_time_pause"] = "1" ,
+						["sw_time_pause"] = "0" ,
 						["sw_time_start"] = "10" ,
 						["sw_time_real"] = "0" ,
 						["sw_time_real_offset"] = "0" ,
 						["sw_time_speed_day"] = "0.01" ,
-						["sw_time_speed_night"] = "0.02" ,
+						["sw_time_speed_night"] = "0.013333" ,
 						-- ["sw_time_speed_stars"] = "0.01" ,
 						["sw_light_day_brightness"] = "25" ,
 						["sw_light_night_brightness"] = "2" ,
