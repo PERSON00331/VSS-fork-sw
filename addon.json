@@ -1,0 +1,19 @@
+{
+  "title": "VSS Fork: Simple Weather",
+  "type": "ServerContent",
+  "tags": [
+    "fun",
+    "roleplay",
+    "realism"
+  ],
+  "ignore": [
+    ".md",
+    ".json",
+    ".txt",
+    ".png",
+    "*.json",
+    "*.md",
+    "*.png",
+    "*.txt"
+  ]
+}
