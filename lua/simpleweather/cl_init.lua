@@ -87,7 +87,15 @@ SW.CurrentParticles = 0
 
 local function nSetWeather()
 
+	local previousWeather = SW.WeatherMode
 	SW.WeatherMode = net.ReadString()
+
+	local snowWeathers = { snow = true, blizzard = true }
+	if snowWeathers[SW.WeatherMode] then
+		SW.SetSnowTextureSettings()
+	elseif snowWeathers[previousWeather] then
+		SW.ResetWeatherTextureSettings()
+	end
 
 	if SW.GetCurrentWeather().Announcement and GetConVarNumber("sw_cl_announcement") != 0 and GetConVarNumber("sw_weather_announcement") == 1 then
 

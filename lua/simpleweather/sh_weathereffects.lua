@@ -1318,19 +1318,19 @@ function SW.ResetWeatherTextureSettings()
 
 		local m = Material( k )
 
-		if originals[1] then
+		if not m:IsError() and originals[1] then
 			m:SetTexture( "$basetexture", originals[1] )
 		end
 
-		if originals[2] then
+		if not m:IsError() and originals[2] then
 			m:SetTexture( "$basetexture2", originals[2] )
 		end
 
-		if originals[3] then
+		if not m:IsError() and originals[3] then
 			m:SetTexture( "$bumpmap", originals[3] )
 		end
 
-		if originals[4] then
+		if not m:IsError() and originals[4] then
 			m:SetTexture( "$bumpmap2", originals[4] )
 		end
 
@@ -1340,7 +1340,7 @@ function SW.ResetWeatherTextureSettings()
 
 		local m = Material( k )
 
-		if originals[1] then
+		if not m:IsError() and originals[1] then
 			m:SetTexture( "$basetexture", originals[1] )
 		end
 
@@ -1363,31 +1363,38 @@ hook.Add( "InitPostEntity", "SW.ResetWeatherTextureSettings", SW.ResetWeatherTex
 
 function SW.SetSnowTextureSettings()
 
-	if GetConVarNumber("sw_func_textures") != 1 or CLIENT then return end
+	if GetConVarNumber("sw_func_textures") != 1 then return end
+
+	local snowMaterial = Material( SW.SnowSettings[1] )
+	local snowTexture = snowMaterial:GetTexture( "$basetexture" )
+	if snowMaterial:IsError() or not snowTexture then
+		print( "[SW] Snow replacement texture is unavailable: " .. SW.SnowSettings[1] )
+		return
+	end
 
 	for k, modelTexture in pairs( SW.SnowModelSettings ) do
 
 		local originalMaterial = string.lower( modelTexture[1] )
 
 		local m = Material( originalMaterial )
+		if m:IsError() then continue end
 
 		if( !SW.WeatherModelResets[originalMaterial] ) then
 
-			local t1 = m:GetTexture( "$basetexture" )
-
-			if t1 and t1 != "" then
-				o_t1 = string.lower( t1:GetName() )
-			end
+			local originalTexture = m:GetTexture( "$basetexture" )
+			SW.WeatherModelResets[originalMaterial] = { originalTexture }
 
 		end
 
 		local replacement = string.lower( modelTexture[2] )
 		local m_replacement = Material( replacement )
 
-		if ( m_replacement:GetTexture( "$basetexture" ) == nil ) then print( "[SW] Snow Replacement $basetexture: " .. tostring( m_replacement ) .. " is not valid." ) return end
-		m:SetTexture( "$basetexture", m_replacement:GetTexture( "$basetexture" ) )
-
-		SW.WeatherModelResets[originalMaterial] = { o_t1 }
+		local replacementTexture = m_replacement:GetTexture( "$basetexture" )
+		if m_replacement:IsError() or not replacementTexture then
+			print( "[SW] Snow replacement material is unavailable: " .. replacement )
+			continue
+		end
+		m:SetTexture( "$basetexture", replacementTexture )
 
 		-- if GetConVarNumber("sw_debug") == 1 then print("simpleweather/sh_weathereffects::SW.SetSnowTextureSettings::Model Relacement::" .. tostring(m) .. " is now " .. tostring(m_replacement) ) end
 
@@ -1395,9 +1402,10 @@ function SW.SetSnowTextureSettings()
 
 	for k, v in pairs( SW.SnowTextureSettings ) do
 
-		originalMaterial = string.lower( v[1] )
+		local originalMaterial = string.lower( v[1] )
 
 		local m = Material( originalMaterial )
+		if m:IsError() then continue end
 
 		if( !SW.WeatherTextureResets[originalMaterial] ) then
 			local t1 = m:GetTexture( "$basetexture" )
@@ -1405,52 +1413,30 @@ function SW.SetSnowTextureSettings()
 			local b1 = m:GetTexture( "$bumpmap" )
 			local b2 = m:GetTexture( "$bumpmap2" )
 
-			if t1 and t1 != "error" then
-				o_t1 = string.lower( t1:GetName() )
-			end
-
-			if t2 and t2 != "error" then
-				o_t2 = string.lower( t2:GetName() )
-			end
-
-			if b1 and b1 != "error" then
-				-- print(tostring(o_b1))
-				o_b1 = string.lower( b1:GetName() )
-			else
-				o_b1 = string.lower( "dev/bump_normal" )
-			end
-
-			if b2 and b2 != "error"  then
-				-- print(tostring(o_b2))
-				o_b2 = string.lower( b2:GetName() )
-			else
-				o_b2 = string.lower( "dev/bump_normal" )
-			end
-
-			SW.WeatherTextureResets[originalMaterial] = { o_t1 , o_t2 , o_b1 , o_b2 }
+			SW.WeatherTextureResets[originalMaterial] = { t1, t2, b1, b2 }
 
 		end
 
 		if v[2] == 0 then
 
-			m:SetTexture( "$basetexture", SW.SnowSettings[1] )
+			m:SetTexture( "$basetexture", snowTexture )
 			-- m:SetTexture( "$bumpmap", SW.SnowSettings[2] )
 
-			m:SetTexture( "$basetexture2", SW.SnowSettings[1] )
+			m:SetTexture( "$basetexture2", snowTexture )
 			-- m:SetTexture( "$bumpmap2", SW.SnowSettings[2] )
 
 		end
 
 		if v[2] == 1 then
 
-			m:SetTexture( "$basetexture", SW.SnowSettings[1] )
+			m:SetTexture( "$basetexture", snowTexture )
 			-- m:SetTexture( "$bumpmap", SW.SnowSettings[2] )
 
 		end
 
 		if v[2] == 2 then
 
-			m:SetTexture( "$basetexture2", SW.SnowSettings[1] )
+			m:SetTexture( "$basetexture2", snowTexture )
 			-- m:SetTexture( "$bumpmap2", SW.SnowSettings[2] )
 
 		end
@@ -1468,24 +1454,17 @@ function SW.SetSnowTextureSettings()
 
 				local m = Material( v )
 
-				if( !SW.WeatherTextureResets[v] ) then
+				if not m:IsError() and !SW.WeatherTextureResets[v] then
 					local t1 = m:GetTexture( "$basetexture" )
 					local t2 = m:GetTexture( "$basetexture2" )
 
-					local m1, m2
-					if( t1 and t1 != "" ) then
-						m1 = string.lower( t1:GetName() )
-					end
-
-					if( t2 and t2 != "" ) then
-						m2 = string.lower( t2:GetName() )
-					end
-
-					SW.WeatherTextureResets[v] = { m1, m2 }
+					SW.WeatherTextureResets[v] = { t1, t2 }
 
 				end
 
-				m:SetTexture( "$basetexture", SW.SnowSettings[1] )
+				if not m:IsError() then
+					m:SetTexture( "$basetexture", snowTexture )
+				end
 
 				materialSwap = {}
 
