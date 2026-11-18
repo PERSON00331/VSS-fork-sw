@@ -351,10 +351,9 @@ end
 function SW.UpdateSunDirection()
 
 	if SW.IsPaintedSkybox != true or GetConVarNumber("sw_func_sun") != 1 or !IsValid( SW.EnvSun ) then return end
-	if !SW.Time or SW.Time < SW_TIME_DAWN or SW.Time > SW_TIME_DUSK then return end
+	if !SW.Time then return end
 
-	local dayProgress = math.Clamp( ( SW.Time - SW_TIME_DAWN ) / ( SW_TIME_DUSK - SW_TIME_DAWN ), 0, 1 )
-	local pitch = -180 * ( 1 - dayProgress )
+	local pitch = ( SW.Time - SW_TIME_DUSK ) * 15
 	SW.EnvSun:SetKeyValue( "sun_dir", tostring( Angle( pitch, 20, 0 ):Forward() ) )
 
 end
@@ -482,10 +481,7 @@ function SW.DayNightThink()
 
 		if( !SW.NextSunUpdate or CurTime() > SW.NextSunUpdate ) then
 
-			if SW.Time >= SW_TIME_DAWN and SW.Time <= SW_TIME_DUSK and SW.GetCurrentWeather().ShowEnvSun != false then
-				SW.UpdateSunDirection()
-
-			end
+			SW.UpdateSunDirection()
 
 			if( SW.GetCurrentWeather().ShowEnvSun == false or SW.Time < SW_TIME_DAWN or SW.Time > SW_TIME_DUSK ) then
 
@@ -806,8 +802,8 @@ function SW.DNCUpdate( int )
 		if GetConVarNumber("sw_func_skybox") == 1 and IsValid( SW.SkyPaint ) then
 			SW.SkyPaint:SetStarTexture( "skybox/clouds" )
 			SW.SkyPaint:SetStarLayers( 1 )
-			SW.SkyPaint:SetStarScale( 1 )
-			SW.SkyPaint:SetStarFade( 0.4 )
+			SW.SkyPaint:SetStarScale( 2 )
+			SW.SkyPaint:SetStarFade( 0.8 )
 			SW.SkyPaint:SetStarSpeed( 0.03 )
 		end
 
@@ -828,8 +824,8 @@ function SW.DNCUpdate( int )
 		if GetConVarNumber("sw_func_skybox") == 1 and IsValid( SW.SkyPaint ) then
 			SW.SkyPaint:SetStarTexture( "skybox/clouds" )
 			SW.SkyPaint:SetStarLayers( 1 )
-			SW.SkyPaint:SetStarScale( 1 )
-			SW.SkyPaint:SetStarFade( 0.4 )
+			SW.SkyPaint:SetStarScale( 2 )
+			SW.SkyPaint:SetStarFade( 0.8 )
 			SW.SkyPaint:SetStarSpeed( 0.03 )
 		end
 
@@ -846,9 +842,10 @@ function SW.DNCUpdate( int )
 		end
 
 		if GetConVarNumber("sw_func_skybox") == 1 and IsValid( SW.SkyPaint ) then
-			SW.SkyPaint:SetStarTexture( "skybox/starfield" )
-			SW.SkyPaint:SetStarScale( 0.5 )
-			SW.SkyPaint:SetStarFade( 1.5 )
+			SW.SkyPaint:SetStarTexture( "skybox/clouds" )
+			SW.SkyPaint:SetStarLayers( 1 )
+			SW.SkyPaint:SetStarScale( 2 )
+			SW.SkyPaint:SetStarFade( 0.8 )
 			-- SW.SkyPaint:SetStarSpeed( GetConVarNumber("sw_time_speed_stars") )
 			SW.SkyPaint:SetStarSpeed( 0.01 )
 		end
