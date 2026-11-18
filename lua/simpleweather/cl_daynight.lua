@@ -35,7 +35,20 @@ end
 
 local function GetFogBrightness()
 
-	return Lerp( GetDaylightFactor( SW.Time or 0 ), 0.2, 1 )
+	return Lerp( GetDaylightFactor( SW.Time or 0 ), 0.3, 1 )
+
+end
+
+local function GetWeatherFogColor( color )
+
+	local daylight = GetDaylightFactor( SW.Time or 0 )
+	local brightness = GetFogBrightness()
+	local redTint = Lerp( daylight, 0.6, 1 )
+	local greenTint = Lerp( daylight, 0.75, 1 )
+
+	return color.r * brightness * redTint,
+		color.g * brightness * greenTint,
+		color.b * brightness
 
 end
 
@@ -140,9 +153,7 @@ function SW.SetupWorldFog()
 		render.FogMaxDensity( w.FogMaxDensity * SW.CurFogDensity )
 		
 		local c = w.FogColor
-		local brightness = GetFogBrightness()
-		
-		render.FogColor( c.r * brightness, c.g * brightness, c.b * brightness )
+		render.FogColor( GetWeatherFogColor( c ) )
 		
 	else
 		
@@ -181,9 +192,7 @@ function SW.SetupSkyboxFog( scale )
 		render.FogMaxDensity( w.FogMaxDensity * SW.CurFogDensity )
 		
 		local c = w.FogColor
-		local brightness = GetFogBrightness()
-		
-		render.FogColor( c.r * brightness, c.g * brightness, c.b * brightness )
+		render.FogColor( GetWeatherFogColor( c ) )
 		
 	elseif( SW.FogSettings ) then
 		

@@ -661,9 +661,11 @@ function SW.DayNightThink()
 			if( skypaintstart == SW_TIME_FOG ) then
 		
 				local c = SW.GetCurrentWeather().FogColor
-				local fogBrightness = Lerp( daylight, 0.2, 1 )
-				values.TopColor = Vector( c.r / 255 * fogBrightness, c.g / 255 * fogBrightness, c.b / 255 * fogBrightness )
-				values.BottomColor = Vector( c.r / 255 * fogBrightness, c.g / 255 * fogBrightness, c.b / 255 * fogBrightness )
+				local fogBrightness = Lerp( daylight, 0.05, 1 )
+				local redTint = Lerp( daylight, 0.6, 1 )
+				local greenTint = Lerp( daylight, 0.75, 1 )
+				values.TopColor = Vector( c.r / 255 * fogBrightness * redTint, c.g / 255 * fogBrightness * greenTint, c.b / 255 * fogBrightness )
+				values.BottomColor = Vector( c.r / 255 * fogBrightness * redTint, c.g / 255 * fogBrightness * greenTint, c.b / 255 * fogBrightness )
 				
 			else
 
