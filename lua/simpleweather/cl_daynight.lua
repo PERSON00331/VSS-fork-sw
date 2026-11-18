@@ -4,7 +4,7 @@ AddCSLuaFile()
 SW_TIME_DAWN = 6
 SW_TIME_AFTERNOON = 12
 SW_TIME_DUSK = 18
-SW_TIME_NIGHT = 24
+SW_TIME_NIGHT = 20
 
 SW_TIME_WEATHER = 1
 SW_TIME_WEATHER_NIGHT = 2
@@ -16,6 +16,26 @@ SW.Time = GetConVarNumber("sw_time_start")
 if SW.Time == -1 then
 
 	SW.Time = math.Rand( 0 , 23 )
+
+end
+
+local function GetDaylightFactor( time )
+
+	if time < SW_TIME_DAWN - 2 or time >= SW_TIME_DUSK + 2 then
+		return 0
+	elseif time < SW_TIME_DAWN then
+		return ( time - ( SW_TIME_DAWN - 2 ) ) / 2
+	elseif time >= SW_TIME_DUSK then
+		return 1 - ( time - SW_TIME_DUSK ) / 2
+	end
+
+	return 1
+
+end
+
+local function GetFogBrightness()
+
+	return Lerp( GetDaylightFactor( SW.Time or 0 ), 0.2, 1 )
 
 end
 
@@ -87,41 +107,11 @@ function SW.DayNightThink()
 	if( GetConVarNumber("sw_func_fog") == 0 ) then return end
 	if( !SW.Time ) then return end
 
-	local startdensity = GetConVarNumber("sw_fog_densityday")
-	local enddensity = GetConVarNumber("sw_fog_densityday")
-	local lerpdensity = 1
-
-	if( SW.Time < 4 ) then
-
-		startdensity = GetConVarNumber("sw_fog_densitynight")
-		enddensity = GetConVarNumber("sw_fog_densitynight")
-
-	-- elseif( SW.Time < 6 ) then
-
-		-- startdensity = GetConVarNumber("sw_fog_densitynight")
-		-- enddensity = GetConVarNumber("sw_fog_densityday")
-		-- lerpdensity = ( SW.Time - 4 ) / 2
-
-	elseif( SW.Time < 8 ) then
-
-		startdensity = GetConVarNumber("sw_fog_densitynight")
-		enddensity = GetConVarNumber("sw_fog_densityday")
-		lerpdensity = ( SW.Time - 6 ) / 2
-
-	elseif( SW.Time < 18 ) then
-
-	elseif( SW.Time < 20 ) then
-
-		startdensity = GetConVarNumber("sw_fog_densityday")
-		enddensity = GetConVarNumber("sw_fog_densitynight")
-		lerpdensity = ( SW.Time - 18 ) / 2
-
-	else
-
-		startdensity = GetConVarNumber("sw_fog_densitynight")
-		enddensity = GetConVarNumber("sw_fog_densitynight")
-
-	end
+	local targetDensity = Lerp(
+		GetDaylightFactor( SW.Time ),
+		GetConVarNumber("sw_fog_densitynight"),
+		GetConVarNumber("sw_fog_densityday")
+	)
 
 	if( GetConVarNumber("sw_fog_indoors") == 0 and !SW.IsOutsideFrame ) then
 
@@ -129,7 +119,7 @@ function SW.DayNightThink()
 
 	elseif( SW.SkyboxVisible ) then
 
-		SW.CurFogDensity = math.Approach( SW.CurFogDensity, Lerp( lerpdensity, startdensity, enddensity ), GetConVarNumber("sw_fog_speed") )
+		SW.CurFogDensity = math.Approach( SW.CurFogDensity, targetDensity, GetConVarNumber("sw_fog_speed") )
 
 	end
 
@@ -150,8 +140,9 @@ function SW.SetupWorldFog()
 		render.FogMaxDensity( w.FogMaxDensity * SW.CurFogDensity )
 		
 		local c = w.FogColor
+		local brightness = GetFogBrightness()
 		
-		render.FogColor( c.r, c.g, c.b )
+		render.FogColor( c.r * brightness, c.g * brightness, c.b * brightness )
 		
 	else
 		
@@ -161,7 +152,12 @@ function SW.SetupWorldFog()
 		render.FogStart( SW.FogSettings["FogStart"] )
 		render.FogEnd( SW.FogSettings["FogEnd"] )
 		render.FogMaxDensity( SW.CurFogDensity * SW.FogSettings["MaxDensity"] )
-		render.FogColor( SW.FogSettings["r"], SW.FogSettings["g"], SW.FogSettings["b"] )
+		local brightness = GetFogBrightness()
+		render.FogColor(
+			SW.FogSettings["r"] * brightness,
+			SW.FogSettings["g"] * brightness,
+			SW.FogSettings["b"] * brightness
+		)
 		
 	end
 	
@@ -185,8 +181,9 @@ function SW.SetupSkyboxFog( scale )
 		render.FogMaxDensity( w.FogMaxDensity * SW.CurFogDensity )
 		
 		local c = w.FogColor
+		local brightness = GetFogBrightness()
 		
-		render.FogColor( c.r, c.g, c.b )
+		render.FogColor( c.r * brightness, c.g * brightness, c.b * brightness )
 		
 	elseif( SW.FogSettings ) then
 		
@@ -196,7 +193,12 @@ function SW.SetupSkyboxFog( scale )
 		render.FogStart( SW.SkyboxFogSettings["FogStart"] )
 		render.FogEnd( SW.SkyboxFogSettings["FogEnd"] )
 		render.FogMaxDensity( SW.CurFogDensity * SW.SkyboxFogSettings["MaxDensity"] )
-		render.FogColor( SW.SkyboxFogSettings["r"], SW.SkyboxFogSettings["g"], SW.SkyboxFogSettings["b"] )
+		local brightness = GetFogBrightness()
+		render.FogColor(
+			SW.SkyboxFogSettings["r"] * brightness,
+			SW.SkyboxFogSettings["g"] * brightness,
+			SW.SkyboxFogSettings["b"] * brightness
+		)
 		
 	end
 	

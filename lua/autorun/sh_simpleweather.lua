@@ -155,7 +155,7 @@ end
 CreateConVar( "sw_debug" , 0 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Enable SimpleWeather debug mode to print verbose info to console." , 0 , 1 )
 CreateConVar( "sw_func_master" , 1 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Enable SimpleWeather mod." , 0 , 1 )
 CreateConVar( "sw_func_lighting" , 1 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Enable map lighting updates.\nTurn this off if the map's a night map already!" , 0 , 1 )
-CreateConVar( "sw_func_sun" , 1 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Enable sun moving through the sky." , 0 , 1 )
+CreateConVar( "sw_func_sun" , 1 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Enable sun sprite controls; its direction still tracks time for sky coloring." , 0 , 1 )
 CreateConVar( "sw_func_skybox" , 1 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Enable the skybox to change color through the day." , 0 , 1 )
 CreateConVar( "sw_func_fog" , 1 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Enable the fog to change color.\nPrevents weird light fog at night - turn it off if weird stuff happens." , 0 , 1 )
 CreateConVar( "sw_func_wind" , 1 , { FCVAR_ARCHIVE , FCVAR_REPLICATED } , "(BOOL) Enable wind functions.\nTurn it off if weird stuff happens." , 0 , 1 )

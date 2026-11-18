@@ -47,9 +47,9 @@ SW.SkyColors[SW_TIME_AFTERNOON] = {
 }
 
 SW.SkyColors[SW_TIME_DUSK] = {
-	["TopColor"]		= Vector( 0.04 , 0.09 , 0.27 ) ,
+	["TopColor"]		= Vector( 0.04 , 0.09 , 0.14 ) ,
 	["BottomColor"]		= Vector( 0.86 , 0.41 , 0.12 ) ,
-	["FadeBias"]		= 0.12 ,
+	["FadeBias"]		= 0.46 ,
 	["HDRScale"]		= 0.66 ,
 	["DuskIntensity"]	= 1.56 ,
 	["DuskScale"]		= 0.54 ,
@@ -348,14 +348,30 @@ function SW.GetRealTime()
 
 end
 
+local function GetDaylightFactor( time )
+
+	if time < SW_TIME_DAWN - 2 or time >= SW_TIME_DUSK + 2 then
+		return 0
+	elseif time < SW_TIME_DAWN then
+		return ( time - ( SW_TIME_DAWN - 2 ) ) / 2
+	elseif time >= SW_TIME_DUSK then
+		return 1 - ( time - SW_TIME_DUSK ) / 2
+	end
+
+	return 1
+
+end
+
 function SW.UpdateSunDirection()
 
-	if SW.IsPaintedSkybox != true or GetConVarNumber("sw_func_sun") != 1 or !IsValid( SW.EnvSun ) then return end
-	if !SW.Time then return end
+	if SW.IsPaintedSkybox != true or !SW.Time then return end
 
 	local pitch = ( SW.Time - SW_TIME_DUSK ) * 15
 	local sunDirection = Angle( pitch, 20, 0 ):Forward()
-	SW.EnvSun:SetKeyValue( "sun_dir", tostring( sunDirection ) )
+
+	if IsValid( SW.EnvSun ) then
+		SW.EnvSun:SetKeyValue( "sun_dir", tostring( sunDirection ) )
+	end
 
 	if IsValid( SW.SkyPaint ) then
 		SW.SkyPaint:SetSunNormal( sunDirection )
@@ -482,10 +498,9 @@ function SW.DayNightThink()
 
 	SW.UpdateLightStyle( strLightStyle )
 
-	if GetConVarNumber("sw_func_sun") == 1 and IsValid( SW.EnvSun ) then
+	if( !SW.NextSunUpdate or CurTime() > SW.NextSunUpdate ) then
 
-		if( !SW.NextSunUpdate or CurTime() > SW.NextSunUpdate ) then
-
+		if GetConVarNumber("sw_func_sun") == 1 and IsValid( SW.EnvSun ) then
 			if( SW.GetCurrentWeather().ShowEnvSun == false or SW.Time < SW_TIME_DAWN or SW.Time > SW_TIME_DUSK ) then
 
 				if !SW.EnvSun.Off then
@@ -506,10 +521,10 @@ function SW.DayNightThink()
 
 			end
 
-			SW.UpdateSunDirection()
-			SW.NextSunUpdate = CurTime() + GetConVarNumber("sw_perf_updatedelay_sun")
-
 		end
+
+		SW.UpdateSunDirection()
+		SW.NextSunUpdate = CurTime() + GetConVarNumber("sw_perf_updatedelay_sun")
 
 	end
 
@@ -528,55 +543,28 @@ function SW.DayNightThink()
 			local skypaintstart
 			local skypaintend
 			local skypaintlerp = 1
+			local daylight = GetDaylightFactor( SW.Time )
 
-			if( SW.WeatherMode != "" and SW.GetCurrentWeather().DefaultSky != true ) then
-		
-				-- DUSK to NIGHT transition
-				if( SW.Time >= SW_TIME_DUSK or SW.Time <= SW_TIME_NIGHT ) then
-					
-					skypaintstart = SW_TIME_WEATHER --_DUSK
-					skypaintend = SW_TIME_WEATHER_NIGHT
-					skypaintlerp = ( SW.Time - SW_TIME_DUSK ) / 2
+			local weather = SW.GetCurrentWeather()
+			if( SW.WeatherMode != "" and weather.DefaultSky != true ) then
 
-				-- NIGHT to DAWN transition
-				elseif( SW.Time <= SW_TIME_NIGHT or SW.Time <= SW_TIME_DAWN ) then
-
+				if weather.FogColor then
+					skypaintstart = SW_TIME_FOG
+					skypaintend = SW_TIME_FOG
+				elseif daylight <= 0 then
 					skypaintstart = SW_TIME_WEATHER_NIGHT
-					skypaintend = SW_TIME_WEATHER --_DAWN
-					skypaintlerp = ( SW.Time - SW_TIME_DAWN ) / 2
-
-				-- DAWN to AFTERNOON transition
-				elseif( SW.Time <= SW_TIME_DAWN or SW.Time <= SW_TIME_AFTERNOON ) then
-
-					skypaintstart = SW_TIME_WEATHER --_DAWN
-					skypaintend = SW_TIME_WEATHER --_AFTERNOON
-					skypaintlerp = ( SW.Time - SW_TIME_DAWN ) / 2
-					
-				-- AFTERNOON to DUSK transition
-				elseif( SW.Time <= SW_TIME_AFTERNOON or SW.Time <= SW_TIME_DUSK ) then
-					
-					skypaintstart = SW_TIME_WEATHER --_AFTERNOON
-					skypaintend = SW_TIME_WEATHER --_DUSK
-					skypaintlerp = ( SW.Time - SW_TIME_AFTERNOON ) / 2
-
-				end
-
-				if( SW.GetCurrentWeather().FogColor ) then
-
-					local c = SW.GetCurrentWeather().FogColor
-					
-					if( skypaintend == SW_TIME_WEATHER ) then
-
-						skypaintend = SW_TIME_FOG
-
-					end
-					
-					if( skypaintstart == SW_TIME_WEATHER ) then
-
-						skypaintstart = SW_TIME_FOG
-
-					end
-
+					skypaintend = SW_TIME_WEATHER_NIGHT
+				elseif SW.Time < SW_TIME_DAWN then
+					skypaintstart = SW_TIME_WEATHER_NIGHT
+					skypaintend = SW_TIME_WEATHER
+					skypaintlerp = daylight
+				elseif SW.Time < SW_TIME_DUSK then
+					skypaintstart = SW_TIME_WEATHER
+					skypaintend = SW_TIME_WEATHER
+				else
+					skypaintstart = SW_TIME_WEATHER
+					skypaintend = SW_TIME_WEATHER_NIGHT
+					skypaintlerp = 1 - daylight
 				end
 				
 			else
@@ -648,8 +636,9 @@ function SW.DayNightThink()
 			if( skypaintstart == SW_TIME_FOG ) then
 		
 				local c = SW.GetCurrentWeather().FogColor
-				values.TopColor = Vector( c.r / 255, c.g / 255, c.b / 255 )
-				values.BottomColor = Vector( c.r / 255, c.g / 255, c.b / 255 )
+				local fogBrightness = Lerp( daylight, 0.2, 1 )
+				values.TopColor = Vector( c.r / 255 * fogBrightness, c.g / 255 * fogBrightness, c.b / 255 * fogBrightness )
+				values.BottomColor = Vector( c.r / 255 * fogBrightness, c.g / 255 * fogBrightness, c.b / 255 * fogBrightness )
 				
 			else
 
