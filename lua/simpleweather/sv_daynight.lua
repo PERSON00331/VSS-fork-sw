@@ -173,6 +173,7 @@ function SW.UpdateLightStyle( strLightStyle )
 
 	-- If SimpleWeather is disabled...
 	if GetConVarNumber("sw_func_master") != 1 then return end
+	if SW.IsPaintedSkybox != true then return end
 
 	if GetConVarNumber("sw_func_lighting") == 1 and SW.LastLightStyle != strLightStyle then
 
